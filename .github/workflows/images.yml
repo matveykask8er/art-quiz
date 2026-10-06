@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: node tools/extract.js
-      - run: python3 tools/fetch_images.py
+      - run: pip install pillow && python3 tools/fetch_images.py
       - name: Commit images
         run: |
           git config user.name "images-bot"
