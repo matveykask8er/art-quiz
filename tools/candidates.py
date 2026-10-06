@@ -13,12 +13,13 @@ def api(q):
             return out
         except Exception: time.sleep(3)
     return []
+EXTRA=json.load(open('tools/extra_q.json',encoding='utf8'))
 res={}
 for i in R:
     p=P[i]; a0=p['author'].split(',')[0]; last=a0.split(' ')[-1]
     title=re.sub(r'\s*\(.*?\)','',p['title']).replace('«','').replace('»','')
     seen=[]
-    for q in [title+' '+last, a0+' '+title, title+' Google Art Project', last+' '+p['year'][:4]+' '+title]:
+    for q in EXTRA.get(str(i),[])+[title+' '+last, a0+' '+title, title+' Google Art Project', last+' '+p['year'][:4]+' '+title]:
         for t in api(q):
             if t not in seen: seen.append(t)
         time.sleep(0.5)

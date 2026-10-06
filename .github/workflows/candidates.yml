@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/candidates.py
+      - run: pip install pillow && python3 tools/pins.py && python3 tools/candidates.py
       - run: |
           git config user.name "images-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add tools/candidates.json
+          git add tools/candidates.json images
           git commit -m "candidates" || true
           git pull --rebase origin main || true
           git push origin HEAD:main
