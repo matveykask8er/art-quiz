@@ -1,0 +1,23 @@
+name: fetch-images
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node tools/extract.js
+      - run: python3 tools/fetch_images.py
+      - name: Commit images
+        run: |
+          git config user.name "images-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add images
+          git commit -m "Add images" || echo "nothing"
+          git pull --rebase origin main || true
+          git push origin HEAD:main

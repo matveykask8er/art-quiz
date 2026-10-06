@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Третьяковка">
+<meta name="theme-color" content="#14100c">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Третьяковка: угадай картину</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wall:#231d18;
+    --wall-2:#2c241d;
+    --frame:#7a5a30;
+    --frame-light:#b8935a;
+    --card:#2a2119;
+    --cream:#efe6d6;
+    --cream-dim:#c9bda6;
+    --gold:#c9a769;
+    --green:#7c9a72;
+    --red:#b3584c;
+    --shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top, #34291f 0%, var(--wall) 55%, #1a1512 100%);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:36px 16px 60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  .eyebrow{
+    text-align:center;
+    font-family:'Inter',sans-serif;
+    letter-spacing:.25em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    text-align:center;
+    font-size:34px;
+    margin:0 0 6px;
+    color:var(--cream);
+  }
+  .sub{
+    text-align:center;
+    color:var(--cream-dim);
+    font-size:14px;
+    margin-bottom:30px;
+  }
+
+  .progressRow{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+    font-size:13px;
+    color:var(--cream-dim);
+  }
+  .progressBar{
+    flex:1;
+    height:3px;
+    background:rgba(255,255,255,0.1);
+    position:relative;
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .progressFill{
+    position:absolute;left:0;top:0;bottom:0;
+    background:linear-gradient(90deg,var(--frame-light),var(--gold));
+    transition:width .4s ease;
+  }
+  .score{color:var(--gold);font-weight:600;white-space:nowrap;}
+  .homeBtn{
+    background:transparent;
+    border:1px solid rgba(201,167,105,0.3);
+    color:var(--cream-dim);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:7px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .2s, color .2s;
+  }
+  .homeBtn:hover{border-color:var(--gold);color:var(--cream);}
+
+  .frame{
+    background:linear-gradient(160deg,#8a6a3a,#5c421f 40%,#8a6a3a);
+    padding:14px;
+    border-radius:4px;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .frame::before{
+    content:'';
+    position:absolute;inset:6px;
+    border:1px solid rgba(255,255,255,0.15);
+    pointer-events:none;
+    border-radius:2px;
+  }
+  .canvas{
+    background:#100c09;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    position:relative;
+    border-radius:1px;
+  }
+  .canvas img{
+    width:100%;height:100%;object-fit:contain;
+    display:block;
+    background:#0c0906;
+  }
+  .fallback{
+    width:100%;height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:34px;
+    background:
+      repeating-linear-gradient(135deg, #1c1712 0 2px, #191410 2px 4px);
+  }
+  .fallback .glyph{
+    font-family:'Cormorant Garamond',serif;
+    font-size:52px;
+    color:var(--gold);
+    margin-bottom:14px;
+    font-style:italic;
+  }
+  .fallback p{
+    color:var(--cream-dim);
+    font-size:14.5px;
+    line-height:1.55;
+    max-width:400px;
+    margin:0;
+  }
+
+  .placard{
+    margin-top:22px;
+    background:var(--card);
+    border:1px solid rgba(201,167,105,0.18);
+    border-radius:10px;
+    padding:26px 24px;
+    box-shadow:var(--shadow);
+  }
+  .placard label{
+    display:block;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:6px;
+  }
+  .field{margin-bottom:16px;}
+  .field input{
+    width:100%;
+    background:#1a140f;
+    border:1px solid rgba(201,167,105,0.25);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    padding:12px 14px;
+    border-radius:6px;
+    outline:none;
+    transition:border-color .2s;
+  }
+  .field input:focus{border-color:var(--gold);}
+  .field input:disabled{opacity:.75;}
+
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border:none;
+    border-radius:7px;
+    padding:13px 22px;
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(160deg,var(--frame-light),#96712f);
+    color:#1a140f;
+    flex:1;
+  }
+  .btn-primary:hover{opacity:.92;}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(201,167,105,0.35);
+    color:var(--cream-dim);
+  }
+  .btn-ghost:hover{color:var(--cream);border-color:var(--gold);}
+  button:disabled{opacity:.4;cursor:default;}
+
+  .reveal{
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px dashed rgba(201,167,105,0.25);
+    display:none;
+  }
+  .reveal.show{display:block;animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .verdict{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Playfair Display',serif;
+    font-style:italic;
+    font-size:19px;
+    margin-bottom:12px;
+  }
+  .verdict.correct{color:var(--green);}
+  .verdict.wrong{color:var(--red);}
+
+  .answerCard{
+    background:rgba(0,0,0,0.2);
+    border-left:3px solid var(--gold);
+    padding:14px 16px;
+    border-radius:0 6px 6px 0;
+  }
+  .answerCard .t{
+    font-family:'Playfair Display',serif;
+    font-size:20px;
+    color:var(--cream);
+    margin:0 0 4px;
+  }
+  .answerCard .a{
+    color:var(--gold);
+    font-size:14.5px;
+    margin:0 0 6px;
+  }
+  .answerCard .y{
+    color:var(--cream-dim);
+    font-size:12.5px;
+    letter-spacing:.05em;
+  }
+
+  .yourAnswers{
+    margin-top:12px;
+    font-size:13px;
+    color:var(--cream-dim);
+    display:grid;
+    gap:3px;
+  }
+  .yourAnswers b{color:var(--cream);font-weight:600;}
+
+  .finalScreen{text-align:center;padding:50px 20px;}
+  .finalScreen .big{
+    font-family:'Playfair Display',serif;
+    font-size:48px;
+    color:var(--gold);
+    margin:6px 0 4px;
+  }
+  .finalScreen p{color:var(--cream-dim);}
+
+  footer{
+    text-align:center;
+    margin-top:30px;
+    font-size:12px;
+    color:rgba(201,189,166,0.4);
+  }
+  .periodIntro{
+    text-align:center;
+    color:var(--cream-dim);
+    font-size:14.5px;
+    margin-bottom:22px;
+    line-height:1.5;
+  }
+  .periodGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .periodCard{
+    text-align:left;
+    background:var(--card);
+    border:1px solid rgba(201,167,105,0.18);
+    border-radius:10px;
+    padding:18px 16px;
+    cursor:pointer;
+    transition:border-color .2s, transform .15s;
+    color:var(--cream);
+  }
+  .periodCard:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .periodCard:disabled{opacity:.35;cursor:default;transform:none;}
+  .periodCard.periodAll{
+    grid-column:1 / -1;
+    background:linear-gradient(160deg, rgba(201,167,105,0.14), rgba(201,167,105,0.04));
+    border-color:rgba(201,167,105,0.4);
+  }
+  .periodTitle{
+    font-family:'Playfair Display',serif;
+    font-size:18px;
+    color:var(--cream);
+    margin-bottom:2px;
+  }
+  .periodRange{
+    font-size:11.5px;
+    letter-spacing:.04em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .periodDesc{
+    font-size:13px;
+    color:var(--cream-dim);
+    margin-bottom:10px;
+    line-height:1.4;
+  }
+  .periodCount{
+    font-size:12px;
+    color:rgba(201,189,166,0.6);
+  }
+  @media(max-width:520px){
+    .periodGrid{grid-template-columns:1fr;}
+  }
+  @media(max-width:480px){
+    h1{font-size:26px;}
+    .placard{padding:20px 16px;}
+  }
+  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:44px;}
+  body{-webkit-text-size-adjust:100%;}
+  .offlineBox{margin:22px 0 8px;text-align:center}
+  #offlineStatus{margin-top:8px;font-size:13px;color:var(--cream);opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Государственная Третьяковская галерея</div>
+  <h1>Угадай картину</h1>
+  <div class="sub">Назовите автора и название полотна из собрания галереи</div>
+
+  <div class="progressRow" id="progressRow" style="display:none">
+    <button class="homeBtn" id="homeBtn" title="К выбору эпохи">← На главную</button>
+    <span id="qCounter">Вопрос 1 из 24</span>
+    <div class="progressBar"><div class="progressFill" id="progressFill" style="width:4%"></div></div>
+    <span class="score" id="scoreLabel">0 верных</span>
+  </div>
+
+  <div id="periodArea"></div>
+  <div id="quizArea" style="display:none"></div>
+
+  <div id="finalArea" style="display:none"></div>
+
+  <footer>Изображения — общественное достояние (Wikimedia Commons), собрание ГТГ</footer>
+</div>
+
+<script>
+
+/* ---------- Офлайн: сервис-воркер + предзагрузка картинок ---------- */
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+function initOffline(){
+  const btn=document.getElementById('offlineBtn'), st=document.getElementById('offlineStatus');
+  if(!btn) return;
+  try{ if(localStorage.getItem('offlineDone')) st.textContent='Картины сохранены, можно без интернета.'; }catch(e){}
+  btn.onclick=async()=>{
+    if(!navigator.onLine){ st.textContent='Нужен интернет для первой загрузки.'; return; }
+    btn.disabled=true; let ok=0, fail=0, i=0; const miss=[]; const list=PAINTINGS.slice();
+    async function worker(){
+      while(i<list.length){
+        const p=list[i++];
+        try{
+          const lu=localUrl(p);
+          if(!lu&&!p.file) throw 0;
+          let r=lu?await fetch(lu):await fetch(fileUrl(p.file),{mode:'no-cors'});
+          if(!r||(r.type!=='opaque'&&!r.ok)) throw 0;
+          ok++;
+        }catch(e){
+          try{ const u=await findImage(p); if(u){ await fetch(u,{mode:'no-cors'}); ok++; } else { fail++; miss.push(p.author+' — '+p.title); } }catch(e2){ fail++; miss.push(p.author+' — '+p.title); }
+        }
+        st.textContent='Загружено '+(ok+fail)+' из '+list.length;
+      }
+    }
+    await Promise.all([worker(),worker(),worker(),worker()]);
+    st.textContent='Готово: сохранено '+ok+', без картинки '+fail+'.';
+    if(miss.length){ const t=document.createElement('textarea'); t.readOnly=true; t.value=miss.join('\n'); t.style.cssText='width:100%;height:140px;margin-top:8px;font-size:16px;background:#1a140f;color:#f3e9d2;border:1px solid #c9a769;border-radius:6px'; st.appendChild(document.createElement('br')); st.appendChild(t); }
+    try{ localStorage.setItem('offlineDone','1'); }catch(e){}
+    btn.disabled=false;
+  };
+}
+
+const PAINTINGS = [
+  {author:"Иван Шишкин, Константин Савицкий", title:"Утро в сосновом лесу", year:"1889",
+   file:"Shishkin, Ivan - Morning in a Pine Forest.jpg",
+   hint:"Пейзаж с сосновым лесом в тумане, на переднем плане резвится медвежье семейство. Известна в народе как «Три медведя»."},
+  {author:"Виктор Васнецов", title:"Богатыри", year:"1898",
+   file:"Viktor Vasnetsov - Богатыри - Google Art Project.jpg",
+   hint:"Три всадника-воина на конях всматриваются вдаль в степи — Илья Муромец, Добрыня Никитич и Алёша Попович."},
+  {author:"Виктор Васнецов", title:"Алёнушка", year:"1881",
+   file:"Vasnetsov Alenushka.jpg",
+   hint:"Печальная босоногая девушка сидит на камне у лесного омута, склонив голову на колени."},
+  {author:"Василий Суриков", title:"Боярыня Морозова", year:"1887",
+   file:"Boyaryna Morozova by V.Surikov (1884-1887, Tretyakov gallery).jpg",
+   hint:"Женщину в чёрном везут на санях по заснеженной московской улице, она подняла руку с двуперстным крестным знамением."},
+  {author:"Илья Репин", title:"Иван Грозный и сын его Иван 16 ноября 1581 года", year:"1885",
+   file:"REPIN Ivan Terrible&Ivan.jpg",
+   hint:"Царь в ужасе обнимает и держит на руках смертельно раненного сына; на полу — рассыпанный ковёр и кровь."},
+  {author:"Александр Иванов", title:"Явление Христа народу", year:"1837–1857",
+   file:"Александр Андреевич Иванов - Явление Христа народу (Явление Мессии) - Google Art Project.jpg",
+   hint:"Огромное полотно: Иоанн Креститель указывает толпе на приближающуюся вдали фигуру Христа у реки Иордан."},
+  {author:"Иван Крамской", title:"Неизвестная", year:"1883",
+   file:"Kramskoy Portrait of a Woman.jpg",
+   hint:"Элегантная дама в открытом экипаже на фоне зимнего Невского проспекта, взгляд свысока обращён на зрителя."},
+  {author:"Иван Крамской", title:"Христос в пустыне", year:"1872",
+   file:"Ivan Kramskoy - Христос в пустыне - Google Art Project.jpg",
+   hint:"Одинокая фигура сидит на камне среди пустынных холмов на рассвете, погружённая в тяжёлые раздумья."},
+  {author:"Алексей Саврасов", title:"Грачи прилетели", year:"1871",
+   file:"Aleksey Savrasov - Грачи прилетели - Google Art Project.jpg",
+   hint:"Ранняя весна, талый снег, берёзы с грачиными гнёздами на фоне сельской церкви."},
+  {author:"Михаил Врубель", title:"Демон сидящий", year:"1890",
+   file:"Vrubel Demon.jpg",
+   hint:"Мощная печальная фигура полуобнажённого юноши сидит, обхватив колени, среди фантастических кристаллических цветов заката."},
+  {author:"Валентин Серов", title:"Девочка с персиками", year:"1887",
+   file:"Valentin Serov - Девочка с персиками. Портрет В.С.Мамонтовой - Google Art Project.jpg",
+   hint:"Портрет темноволосой девочки за столом с персиками в светлой комнате с солнечными пятнами."},
+  {author:"Валентин Серов", title:"Похищение Европы", year:"1910",
+   file:"Serov Rape of Europa.jpg",
+   hint:"Девушка на спине плывущего по морю быка среди дельфинов — сюжет древнегреческого мифа."},
+  {author:"Кузьма Петров-Водкин", title:"Купание красного коня", year:"1912",
+   file:"Bathing of a Red Horse (Petrov-Vodkin).jpg",
+   hint:"Обнажённый юноша верхом на огромном ярко-красном коне посреди воды."},
+  {author:"Василий Верещагин", title:"Апофеоз войны", year:"1871",
+   file:"Vasily Vereshchagin - Апофеоз войны - Google Art Project.jpg",
+   hint:"Пирамида из человеческих черепов посреди выжженной пустыни, над ней кружит вороньё."},
+  {author:"Владимир Боровиковский", title:"Портрет М. И. Лопухиной", year:"1797",
+   file:"Vladimir Borovikovskiy - Портрет М.И.Лопухиной - Google Art Project.jpg",
+   hint:"Молодая женщина в белом платье облокотилась на каменный парапет среди пейзажа с колосьями и васильками."},
+  {author:"Иван Айвазовский", title:"Радуга", year:"1873",
+   file:"Айвазовский (Гайвазовский) Иван (Оганес) Константинович Радуга.jpg",
+   hint:"Терпящий бедствие корабль среди бушующих волн, сквозь брызги пробивается радуга."},
+  {author:"Борис Кустодиев", title:"Масленица", year:"1916",
+   file:"Boris Kustodiyev - Масленица - Google Art Project.jpg",
+   hint:"Праздничный заснеженный городок сверху, расписные сани с тройками лошадей, золотые купола вдали."},
+  {author:"Николай Ге", title:"Пётр I допрашивает царевича Алексея Петровича в Петергофе", year:"1871",
+   file:"Peter the Great Interrogating the Tsarevich Alexei Petrovich.jpg",
+   hint:"Царь сидит за столом и гневно смотрит на понуро стоящего перед ним сына в кабинете с шахматной доской на полу."},
+  {author:"Михаил Нестеров", title:"Видение отроку Варфоломею", year:"1890",
+   file:"Mikhail Nesterov 001.jpg",
+   hint:"Мальчик в холщовой рубахе стоит перед монахом-схимником на фоне тихого северного пейзажа с рябиной."},
+  {author:"Исаак Левитан", title:"Золотая осень", year:"1895",
+   file:"Golden Autumn. Золотая осень.jpg",
+   hint:"Берёзы в жёлто-золотой листве на берегу извилистой реки под ярко-синим небом."},
+  {author:"Илья Репин", title:"Не ждали", year:"1884–1888",
+   file:"They did not Expect Him.jpg",
+   hint:"В комнату неожиданно входит исхудавший мужчина — ссыльный, вернувшийся домой; семья застыла от неожиданности."},
+  {author:"Василий Суриков", title:"Утро стрелецкой казни", year:"1881",
+   file:"Vasily Surikov - Morning of the Strelets' Execution - Google Art Project.jpg",
+   hint:"Толпа осуждённых стрельцов со свечами на Красной площади в ожидании казни на рассвете."},
+  {author:"Казимир Малевич", title:"Чёрный супрематический квадрат", year:"1915",
+   file:"Kazimir Malevich, 1915, Black Suprematic Square, oil on linen canvas, 79.5 x 79.5 cm, Tretyakov Gallery, Moscow.jpg",
+   hint:"Один сплошной чёрный квадрат на белом фоне — манифест супрематизма."},
+  {author:"Николай Рерих", title:"Заморские гости", year:"1901",
+   file:"Nicholas Roerich, Guests from Overseas.jpg",
+   hint:"Вереница нарядных ладей с полосатыми парусами и щитами на бортах плывёт по реке к далёкому городку."},
+  {author:"Карл Брюллов", title:"Всадница", year:"1832",
+   file:"Karl Bryullov (Bryullo) - Всадница - Google Art Project.jpg",
+   hint:"Юная наездница на вздыбленном вороном коне подъезжает к крыльцу виллы, навстречу выбегает маленькая девочка в розовом."},
+  {author:"Архип Куинджи", title:"Берёзовая роща", year:"1879",
+   file:"Куинджи - Березовая роща 1901.jpg",
+   hint:"Ярко освещённая солнцем лесная поляна между тёмными стволами берёз, контрастная светотень почти без полутонов."},
+  {author:"Василий Перов", title:"Тройка", year:"1866",
+   file:"Тройка - Василий Григорьевич Перов (1866).jpg",
+   hint:"Трое измождённых детей тянут по обледенелой дороге сани с огромной бочкой воды на фоне монастырской стены."},
+  {author:"Василий Пукирев", title:"Неравный брак", year:"1862",
+   file:"Vasily Pukirev - Неравный брак - Google Art Project.jpg",
+   hint:"Молодая невеста со свечой в руке венчается со стариком-женихом; за её спиной — мужчина со скрещёнными руками."},
+  {author:"Павел Федотов", title:"Сватовство майора", year:"1848",
+   file:"Pavel Fedotov - Сватовство майора - Google Art Project.jpg",
+   hint:"В купеческом доме сваха уговаривает смущённую невесту выйти к жениху-майору, застывшему в дверях с расправленными усами."},
+  {author:"Владимир Маковский", title:"На бульваре", year:"1887",
+   file:"Na bulvare - V.Makovskiy (1886-7, GTG).jpg",
+   hint:"Крестьянин в тулупе понуро сидит на скамейке рядом с нарядной женщиной с гармонью — контраст городской и деревенской жизни."},
+  {author:"Зинаида Серебрякова", title:"За туалетом. Автопортрет", year:"1909",
+   file:"Sinaida Jewgenjewna Serebrjakowa At the Dressing-Table 1909.jpg",
+   hint:"Молодая женщина с расчёской в руке улыбается своему отражению в зеркале среди флаконов и шпилек на туалетном столике."},
+  {author:"Марк Шагал", title:"Над городом", year:"1918",
+   file:"Chagall Over the Town (not public domain).jpg",
+   hint:"Влюблённая пара парит в воздухе над крышами провинциального городка — художник обнимает свою жену, паря над Витебском."},
+  {author:"Илья Репин", title:"Крёстный ход в Курской губернии", year:"1883",
+   file:"Ilya Repin - Крестный ход в Курской губернии - Google Art Project.jpg",
+   hint:"Огромная толпа паломников несёт икону по пыльной дороге среди выжженного солнцем поля."},
+  {author:"Илья Репин", title:"Портрет Л. Н. Толстого", year:"1887",
+   file:"Ilya Efimovich Repin (1844-1930) - Portrait of Leo Tolstoy (1887).jpg",
+   hint:"Седобородый писатель в свободной рубахе сидит в кресле с книгой, взгляд направлен прямо на зрителя."},
+  {author:"Илья Репин", title:"Протодиакон", year:"1877",
+   file:"Archdeacon by Repin.jpg",
+   hint:"Массивный бородатый священнослужитель в чёрном облачении смотрит на зрителя с чуть насмешливым прищуром."},
+  {author:"Илья Репин", title:"Портрет М. П. Мусоргского", year:"1881",
+   file:"Ilya Repin - Портрет композитора М.П.Мусоргского - Google Art Project.jpg",
+   hint:"Растрёпанный рыжеволосый мужчина в больничном халате написан незадолго до смерти композитора."},
+  {author:"Василий Суриков", title:"Меншиков в Берёзове", year:"1883",
+   file:"SurikovMenshikovBerezovo.jpg",
+   hint:"Опальный вельможа с дочерьми сидит в тесной низкой избе сибирской ссылки, укутанный в шубу."},
+  {author:"Виктор Васнецов", title:"Иван-царевич на Сером волке", year:"1889",
+   file:"Wiktor Michajlowitsch Wassnezow 004.jpg",
+   hint:"Царевич с похищенной царевной верхом на огромном сером волке мчится через тёмный сказочный лес."},
+  {author:"Виктор Васнецов", title:"После побоища Игоря Святославича с половцами", year:"1880",
+   file:"Viktor Vasnetsov - After Prince Igor's Battle with the Polovtsi.jpg",
+   hint:"На поле битвы среди тел павших воинов кружат орлы на фоне багрового закатного неба."},
+  {author:"Михаил Врубель", title:"Царевна-Лебедь", year:"1900",
+   file:"Tsarevna-Lebed by Mikhail Vrubel.jpg",
+   hint:"Девушка-птица с огромными крыльями оборачивается к зрителю в сумерках, венец мерцает на фоне морской дали."},
+  {author:"Михаил Врубель", title:"Пан", year:"1899",
+   file:"Vrubel pan.jpg",
+   hint:"Седой лесной старик с козлиными рогами и голубыми глазами сидит на опушке в свете народившегося месяца."},
+  {author:"Исаак Левитан", title:"Владимирка", year:"1892",
+   file:"Vladimirka.jpg",
+   hint:"Уходящая к горизонту пыльная дорога через поле — печально знаменитый путь ссыльных в Сибирь."},
+  {author:"Исаак Левитан", title:"Над вечным покоем", year:"1894",
+   file:"Levitan nad vech pok28.jpg",
+   hint:"Маленькая деревянная церковь и кладбище на мысу над огромным свинцовым озером под грозовым небом."},
+  {author:"Исаак Левитан", title:"Март", year:"1895",
+   file:"Mart levitan.jpg",
+   hint:"Талый снег у деревянного дома, жёлтая стена на солнце, запряжённая лошадь у крыльца — предчувствие весны."},
+  {author:"Иван Шишкин", title:"Рожь", year:"1878",
+   file:"Ivan Shishkin - Рожь - Google Art Project.jpg",
+   hint:"Золотое поле спелой ржи с высокими соснами вдалеке, узкая тропинка уходит вглубь картины."},
+  {author:"Валентин Серов", title:"Мика Морозов", year:"1901",
+   file:"Valentin Serov - Портрет Мики Морозова.jpg",
+   hint:"Портрет широко раскрывшего глаза мальчика, привставшего в кресле, будто его только что окликнули."},
+  {author:"Михаил Нестеров", title:"Пустынник", year:"1888–1889",
+   file:"Mikhail Nesterov - The Hermit.jpg",
+   hint:"Старый монах медленно идёт по тропе вдоль тихого озера с посохом в руке, вокруг — ранняя осень."},
+  {author:"Иван Крамской", title:"Пасечник", year:"1872",
+   file:"Крамской Пасечник 1872.jpg",
+   hint:"Седой старик-пасечник в холщовой рубахе сидит на пеньке в лесу, опираясь на палку, взгляд спокойный и мудрый."},
+  {author:"Иван Айвазовский", title:"Чёрное море", year:"1881",
+   file:"Иван Константинович Айвазовский - Черное море (на Черном море начинает разыгрываться буря) - Google Art Project.jpg",
+   hint:"Пустынное бурное море без единого корабля — только тяжёлые волны под низким облачным небом."},
+  {author:"Василий Поленов", title:"Московский дворик", year:"1878",
+   file:"Moscow Courtyard (Polenov, 1878) - Google Art Project.jpg",
+   hint:"Залитый солнцем двор с белой церковью, играющими детьми и лошадью, запряжённой в телегу."},
+  {author:"Василий Поленов", title:"Бабушкин сад", year:"1878",
+   file:"Vasily Polenov - Grandmother's Garden - Google Art Project.jpg",
+   hint:"Пожилая женщина в чёрном идёт под руку с молодой девушкой по заросшей зелёной дорожке старой усадьбы."},
+  {author:"Орест Кипренский", title:"Портрет А. С. Пушкина", year:"1827",
+   file:"Orest Kiprensky - Портрет поэта А.С.Пушкина - Google Art Project.jpg",
+   hint:"Поэт в клетчатом плаще стоит, скрестив руки, за его плечом — бронзовая статуэтка музы с лирой."},
+  {author:"Василий Тропинин", title:"Кружевница", year:"1823",
+   file:"Vasily Tropinin - Кружевница - Google Art Project.jpg",
+   hint:"Молодая девушка за плетением кружева поднимает взгляд на зрителя, тонкие нити натянуты на коклюшках."},
+  {author:"Алексей Венецианов", title:"На пашне. Весна", year:"1820-е",
+   file:"Aleksey Venetsianov - На пашне. Весна - Google Art Project.jpg",
+   hint:"Крестьянка в сарафане ведёт под уздцы двух лошадей по весеннему полю, лёгкая и почти невесомая на ходу."},
+  {author:"Андрей Рублёв", title:"Троица", year:"1420-е",
+   file:"Andrey Rublev - Св. Троица - Google Art Project.jpg",
+   hint:"Три ангела с наклонёнными друг к другу головами сидят вокруг стола с чашей — икона древнерусского письма."},
+  {author:"Антон Лосенко", title:"Прощание Гектора с Андромахой", year:"1773",
+   file:"Anton Losenko - Прощание Гектора с Андромахой - Google Art Project.jpg",
+   hint:"Воин в доспехах прощается с женой перед битвой на фоне колоннады античного дворца — сюжет из «Илиады»."},
+  {author:"Фёдор Рокотов", title:"Портрет А. П. Струйской", year:"1772",
+   file:"Fedor Rokotov - Портрет А.П.Струйской - Google Art Project.jpg",
+   hint:"Загадочная полуулыбка молодой женщины в напудренном парике, взгляд слегка асимметричен и как будто следит за зрителем."},
+  {author:"Василий Перов", title:"Охотники на привале", year:"1871",
+   file:"Wassili Grigorjewitsch Perow - Hunters resting.jpg",
+   hint:"Трое охотников расположились на отдых, один с азартом рассказывает небылицу, двое слушают — кто с недоверием, кто заворожённо."},
+  {author:"Василий Перов", title:"Приезд гувернантки в купеческий дом", year:"1866",
+   file:"Vasily Perov - Приезд гувернантки в купеческий дом.jpg",
+   hint:"Молодая девушка со скромным чемоданом робко стоит перед насмешливо разглядывающим её купеческим семейством."},
+  {author:"Александр Дейнека", title:"Будущие лётчики", year:"1938",
+   file:"Deineka not public domain placeholder.jpg",
+   hint:"Трое мальчишек сидят на парапете у моря, глядя вслед пролетающему гидросамолёту вдалеке."},
+  {author:"Аркадий Пластов", title:"Фашист пролетел", year:"1942",
+   file:"Plastov not public domain placeholder.jpg",
+   hint:"Мёртвый пастушок лежит на осеннем лугу среди разбежавшегося стада — в небе удаляющийся вражеский самолёт."},
+  {author:"Константин Юон", title:"Новая планета", year:"1921",
+   file:"Yuon not public domain placeholder.jpg",
+   hint:"Толпа людей в страхе и восторге вскидывает руки к небу, где среди звёзд разгорается огромное новое светило."},
+  {author:"Иван Айвазовский", title:"Конец бури на море", year:"1839",
+   file:"Aivazovsky End of Storm.jpg",
+   hint:"Стихающие после бури волны у скалистого берега, сквозь расходящиеся тучи пробивается спокойный свет."},
+  {author:"Иван Айвазовский", title:"Буря", year:"1872",
+   file:"Айвазовский (Гайвазовский) Иван (Оганес) Константинович Буря.jpg",
+   hint:"Одинокое судно борется с огромными волнами под свинцовым штормовым небом."},
+  {author:"Иван Айвазовский", title:"Вид Леандровой башни в Константинополе", year:"1848",
+   file:"Айвазовский (Гайвазовский) Иван (Оганес) Константинович Вид Леандровой башни в Константинополе.jpg",
+   hint:"Силуэт башни на скале у входа в Босфор, тихая вода и лодки на переднем плане в закатном свете."},
+  {author:"Иван Айвазовский", title:"Лунная ночь на Босфоре", year:"1894",
+   file:"Айвазовский (Гайвазовский) Иван (Оганес) Константинович Лунная ночь на Босфоре.jpg",
+   hint:"Серебристая лунная дорожка на спокойной воде пролива, вдалеке — огни ночного города."},
+  {author:"Иван Айвазовский", title:"Туман на море", year:"1873",
+   file:"Ivan Aivazovsky - Fog on the sea.jpg",
+   hint:"Расплывчатые силуэты кораблей растворяются в плотной пелене морского тумана."},
+  {author:"Григорий Мясоедов", title:"Рожь", year:"1881",
+   file:"Grigoriy Grigoryevich Myasoyedov Rye.jpg",
+   hint:"Широкое золотое поле спелой ржи под высоким летним небом, вдалеке — редкие деревья."},
+  {author:"Исаак Левитан", title:"Тихая обитель", year:"1890",
+   file:"Isaak Levitan Tihaya obitel.jpg",
+   hint:"Бревенчатый мостик через тихую реку ведёт к белому монастырю среди золотистого леса на закате."},
+  {author:"Василий Худяков", title:"Стычка с финляндскими контрабандистами", year:"1853",
+   file:"A Brawl with Finnish Contrabandists by Vasili Khudiakov.jpg",
+   hint:"Всадники в схватке на фоне заснеженных скал — сюжет о пограничной контрабанде."},
+  {author:"Александр Иванов", title:"Аполлон, Гиацинт и Кипарис, занимающиеся музыкой и пением", year:"1834",
+   file:"Apollo, Hyacinthus and Cyparissus Making Music and Singing by Alexander Ivanov.jpg",
+   hint:"Три обнажённых юноши на лоне природы музицируют и поют — идиллическая сцена из античного мифа."},
+  {author:"Василий Суриков", title:"Автопортрет", year:"1879",
+   file:"V.Surikov, Self-Portrait (1879, Tretyakov gallery).jpg",
+   hint:"Художник смотрит на зрителя прямым, немного суровым взглядом, тёмный фон почти сливается с одеждой."},
+  {author:"Виктор Васнецов", title:"Портрет Т. А. Мамонтовой", year:"1884",
+   file:"T.A.Mamontova by V.Vasnetsov (1884, GTG).jpg",
+   hint:"Молодая девушка в скромном тёмном платье позирует на фоне простого интерьера."},
+  {author:"Валентин Серов", title:"Портрет Константина Коровина", year:"1891",
+   file:"Portrait de l'artiste Konstantine Korovine. Valentin Serov. 1891.jpg",
+   hint:"Художник в свободной рубахе облокотился на стол, взгляд живой и слегка ироничный."},
+  {author:"Николай Ге", title:"Портрет Л. Н. Толстого", year:"1884",
+   file:"Nikolay Ge - Léon Tolstoï. 1884.jpg",
+   hint:"Писатель изображён за письменным столом, поглощённый работой, в простой крестьянской рубахе."},
+  {author:"Валентин Серов", title:"Октябрь. Домотканово", year:"1895",
+   file:"Serow October. Domotcanovo.jpg",
+   hint:"Пастух с лошадью и овцами на фоне осеннего поля и облетающих деревьев усадьбы."},
+  {author:"Валентин Серов", title:"Осенний вечер. Домотканово", year:"1886",
+   file:"Walentin Aleksandrovich Serov Autumn Evening.jpg",
+   hint:"Приглушённый пейзаж с одинокой фигурой на фоне сумеречного осеннего поля."},
+  {author:"Валентин Серов", title:"Волы", year:"1885",
+   file:"Walentin Aleksandrovich Serov Bullocks.jpg",
+   hint:"Упряжка волов на просёлочной дороге среди простого сельского пейзажа."},
+  {author:"Иван Крамской", title:"Портрет И. И. Шишкина", year:"1873",
+   file:"Ivan Nikolayevich Kramskoi - Portrait of Ivan Ivanovich Shishkin, 1873.jpg",
+   hint:"Бородатый художник-пейзажист стоит с этюдником на фоне леса, взгляд направлен вдаль."},
+  {author:"Иван Крамской", title:"Портрет И. А. Гончарова", year:"1874",
+   file:"Ivan Nikolayevich Kramskoi - Portrait of Ivan Aleksandrovich Goncharov, 1874.jpg",
+   hint:"Пожилой писатель в тёмном сюртуке сидит в кресле со спокойным, немного усталым выражением лица."},
+  {author:"Иван Крамской", title:"Автопортрет", year:"1867",
+   file:"Ivan Nikolayevich Kramskoi - Self-portrait, 1867.jpg",
+   hint:"Молодой художник с бородой смотрит прямо на зрителя на нейтральном тёмном фоне."},
+  {author:"Дмитрий Левицкий", title:"Портрет П. А. Демидова", year:"1773",
+   file:"Levitzky Demidov.jpg",
+   hint:"Богато одетый вельможа позирует у колонны, но опирается на лейку — намёк на его увлечение ботаникой."},
+  {author:"Луи Каравак", title:"Портрет императрицы Анны Иоанновны", year:"1730",
+   file:"Louis Caravaque, Portrait of Empress Anna Ioannovna (1730).jpg",
+   hint:"Императрица в горностаевой мантии и короне позирует в пышном придворном платье XVIII века."},
+  {author:"Степан Щукин", title:"Портрет Павла I", year:"1797",
+   file:"Paul I of Russia by Stepan Shchukin (1797, Tretyakov gallery).jpg",
+   hint:"Император в военном мундире с орденской лентой стоит на фоне колонны и драпировки."},
+  {author:"Георг Гроот", title:"Портрет Петра III", year:"1743",
+   file:"Peter III of Russia by Grooth (1743, Tretyakov gallery).jpg",
+   hint:"Юный наследник престола изображён в пышном придворном костюме на парадном портрете."},
+  {author:"Илья Репин", title:"Стрекоза (Портрет дочери художника)", year:"1884",
+   file:"RepinPaintersDaughter.jpg",
+   hint:"Девочка в лёгком платье беззаботно сидит на деревянной изгороди на фоне летнего пейзажа."},
+  {author:"Илья Репин", title:"Осенний букет", year:"1892",
+   file:"Repin bouquet.jpg",
+   hint:"Девушка в белом платье с большим букетом полевых цветов стоит на фоне осеннего сада."},
+  {author:"Фёдор Рокотов", title:"Неизвестная в розовом платье", year:"1770-е",
+   file:"Rokotov Unknown In Rose Dress.jpg",
+   hint:"Погружённый в дымку портрет молодой женщины в нежно-розовом платье с полуулыбкой."},
+  {author:"Андрей Рублёв", title:"Спас", year:"1420-е",
+   file:"Rublev's saviour.jpg",
+   hint:"Строгий и одновременно кроткий лик Христа в круглом нимбе — фрагмент древнего иконостаса."},
+  {author:"Андрей Рябушкин", title:"Пляска", year:"1902",
+   file:"Ryabushkin dance.jpg",
+   hint:"Народная сцена с фигурами в старинных русских костюмах в движении танца."},
+  {author:"Сергей Иванов", title:"В дороге. Смерть переселенца", year:"1889",
+   file:"S. V. Ivanov. On the road. Death of a migrant. (1889).jpg",
+   hint:"Семья переселенцев остановилась у обочины дороги — один из них лежит без сил на земле."},
+  {author:"Фёдор Алексеев", title:"Красная площадь в Москве", year:"1801",
+   file:"Feodor Alekseyev - Red Square in Moscow.jpg",
+   hint:"Вид на кремлёвские стены и торговые ряды с высокими куполами храма Василия Блаженного вдалеке."},
+  {author:"Карл Брюллов", title:"Вирсавия", year:"1832",
+   file:"Brulloff Bathsheba.jpg",
+   hint:"Обнажённая женщина у водоёма среди пышной южной растительности — библейский сюжет."},
+  {author:"Константин Коровин", title:"Бульвар Капуцинок в Париже", year:"1911",
+   file:"Boulevard des Capucines by Konstantin Korovin 1911.jpg",
+   hint:"Размытые огни и силуэты экипажей на вечернем парижском бульваре, написанные быстрыми мазками."},
+  {author:"Пётр Кончаловский", title:"Бой быков", year:"1910",
+   file:"Bull fighting by Petr Konchalovsky (1910) 02.jpg",
+   hint:"Яркая динамичная сцена корриды с матадором и быком на арене, написанная крупными цветовыми пятнами."},
+  {author:"Михаил Ларионов", title:"Голова быка", year:"1913",
+   file:"Bull's Head (Larionov, 1913).jpg",
+   hint:"Упрощённое, почти примитивистское изображение бычьей головы яркими плоскими цветами."},
+  {author:"Кузьма Петров-Водкин", title:"Смерть комиссара (эскиз)", year:"1928",
+   file:"Death of Commissar - Sketch (Kuzma Petrov-Vodkin).jpg",
+   hint:"Раненый командир падает на руки товарища на фоне сферически изогнутого пейзажа боя."},
+  {author:"Константин Коровин", title:"На берегу моря в Крыму", year:"1909",
+   file:"Constantin Korovin - On the Seashore in the Crimea.JPG",
+   hint:"Женская фигура на террасе у моря, яркий южный свет и свободные широкие мазки."},
+  {author:"Василий Перов", title:"Последний кабак у заставы", year:"1868",
+   file:"Last Tavern at Town Gate (Perov, 1868) - Google Art Project.jpg",
+   hint:"Одинокие сани у освещённого окнами кабака на фоне морозных сумерек и городской заставы."},
+  {author:"Исаак Левитан", title:"Вечерний звон", year:"1892",
+   file:"1892 Levitan Abendglocken anagoria.JPG",
+   hint:"Монастырь на берегу тихой реки отражается в спокойной воде в лучах заходящего солнца."},
+  {author:"Иван Крамской", title:"Лунная ночь", year:"1880",
+   file:"Moonlight night by Ivan Kramskoy (GTG).jpeg",
+   hint:"Женщина в белом платье сидит на скамье в саду, освещённая мягким лунным светом."},
+  {author:"Николай Кузнецов", title:"Ключница", year:"1887",
+   file:"Nikolai Dmitriyevich Kuznetsov, The Keyholder, 1887, Tretyakov Gallery 954.jpg",
+   hint:"Пожилая женщина с связкой ключей на поясе стоит у двери, взгляд усталый и настороженный."},
+  {author:"Константин Маковский", title:"Портрет Орловой-Давыдовой", year:"1880-е",
+   file:"Orlova-Davydova by Konstantin Makovsky.jpg",
+   hint:"Нарядная светская дама в пышном платье позирует в изысканном интерьере."},
+  {author:"Валентин Серов", title:"Девушка, освещённая солнцем", year:"1888",
+   file:"Girl in the Sunlight. Portrait of Maria Simonovich. 1888. Oil on canvas. The Tretyakov Gallery, Moscow, Russia..jpg",
+   hint:"Молодая женщина сидит в тени листвы, пятна солнечного света играют на её лице и блузе."},
+  {author:"Михаил Врубель", title:"Демон поверженный", year:"1902",
+   file:"Vrubel Fallen Demon.jpg",
+   hint:"Поверженная крылатая фигура лежит среди горных скал в багровых закатных тонах, тело изломано и стиснуто рамой холста."},
+  {author:"Борис Кустодиев", title:"Красавица", year:"1915",
+   file:"Beauty. Kustodiev. 1915.jpg",
+   hint:"Пышная обнажённая купчиха возлежит на перине среди подушек и расписных сундуков."},
+  {author:"Казимир Малевич", title:"Портрет М. В. Матюшина", year:"1913",
+   file:"1913 Malevich Portrait von Mikhail Matjuschin anagoria.JPG",
+   hint:"Кубофутуристический портрет мужчины, лицо и фон разбиты на геометрические цветные грани."},
+  {author:"Валентин Серов", title:"Портрет И. И. Левитана", year:"1893",
+   file:"1893 Levitan - Porträt von Serow.jpg",
+   hint:"Художник-пейзажист в свободной куртке сидит вполоборота, взгляд задумчив и слегка усталый."},
+  {author:"Исаак Левитан", title:"Осенний день. Сокольники", year:"1879",
+   file:"Levitan Sokolniki Autumn 1879.jpg",
+   hint:"Одинокая женская фигура в чёрном идёт по аллее парка среди жёлтых опадающих листьев."},
+  {author:"Исаак Левитан", title:"После дождя. Плёс", year:"1889",
+   file:"After the rain Plyos by Isaac Levitan in the State Tretyakov Gallery IMG 6315.jpg",
+   hint:"Баржи и лодки у берега волжского городка под влажным, посвежевшим после дождя небом."},
+  {author:"Исаак Левитан", title:"У омута", year:"1892",
+   file:"Issak Levitan - The Oak.jpg",
+   hint:"Тёмная заводь у старой мельничной плотины, окружённая тревожным, почти мистическим лесом."},
+  {author:"Иван Крамской", title:"Неутешное горе", year:"1884",
+   file:"Ivan Kramskoy- Unconsolable Grief.JPG",
+   hint:"Женщина в чёрном траурном платье застыла с платком у лица посреди пустой комнаты."},
+  {author:"Иван Крамской", title:"Портрет А. С. Грибоедова", year:"1873",
+   file:"Ivan Nikolayevich Kramskoi - Portrait of Alexander Sergeyevich Griboyedov, 1873.jpg",
+   hint:"Портрет писателя в мундире с орденом, созданный по старым изображениям спустя десятилетия после его смерти."},
+  {author:"Фёдор Рокотов", title:"Портрет Петра III", year:"1758",
+   file:"Peter III by Rokotov (1758, Tretyakov gallery).jpg",
+   hint:"Молодой наследник престола в военном мундире изображён в строгой парадной позе."},
+  {author:"Фёдор Рокотов", title:"Портрет В. Е. Новосильцевой", year:"1780",
+   file:"Fedor Rokotov - Портрет В.Е.Новосильцевой - Google Art Project.jpg",
+   hint:"Погружённый в лёгкую дымку портрет молодой дамы с напудренными волосами и мягким взглядом."},
+  {author:"Иван Крамской", title:"Портрет П. М. Третьякова", year:"1876",
+   file:"Ivan Kramskoy - Портрет П.М.Третьякова - Google Art Project.jpg",
+   hint:"Основатель галереи изображён сидящим в кресле в тёмном сюртуке, взгляд спокойный и сосредоточенный."},
+  {author:"Василий Тропинин", title:"Портрет Н. М. Карамзина", year:"1818",
+   file:"Karamzin by Tropinin (1818, Tretyakov gallery).jpg",
+   hint:"Пожилой историк в тёмном сюртуке с орденом сидит за столом, взгляд серьёзный и вдумчивый."},
+  {author:"Василий Тропинин", title:"Портрет сына художника", year:"1818",
+   file:"Vasily Tropinin - Портрет А.В.Тропинина - Google Art Project.jpg",
+   hint:"Светловолосый мальчик в свободной рубашке смотрит на зрителя с открытым, живым выражением лица."},
+  {author:"Василий Тропинин", title:"Девушка с горшком роз", year:"1850",
+   file:"Girl with an apple by Tropinin.jpg",
+   hint:"Молодая крестьянка в цветастом платке держит в руках плоды, лёгкая улыбка на лице."},
+  {author:"Василий Тропинин", title:"Женщина в окне (Казначейша)", year:"1841",
+   file:"Тропинин В.А. \"Женщина в окне (Казначейша)\". 1841.JPG",
+   hint:"Женщина облокотилась на подоконник, выглядывая на улицу, в руке — цветок."},
+  {author:"Василий Суриков", title:"С гитарой (портрет С. А. Кропоткиной)", year:"1882",
+   file:"With guitar (S.A. Kropotkina) by Surikov (1882).jpg",
+   hint:"Женщина в тёмном платье сидит с гитарой в руках, взгляд направлен куда-то в сторону от зрителя."},
+  {author:"Андрей Рябушкин", title:"Боярская дума", year:"1893",
+   file:"Tsar boyar duma by Andrei Ryabushkinv, galerie Tretiakov.jpg",
+   hint:"Ряды бояр в высоких шапках и долгополых одеждах сидят на скамьях в старинной палате."},
+  {author:"Алексей Венецианов", title:"Туалет Дианы", year:"1847",
+   file:"Alexey Venetsianov - Diana's toillet.jpg",
+   hint:"Обнажённая женская фигура у зеркала среди драпировок — мифологический сюжет в академической манере."},
+  {author:"Валентин Серов", title:"Портрет И. Е. Репина", year:"1892",
+   file:"Portrait of the Artist Ilya Repin.jpg",
+   hint:"Пожилой художник с окладистой бородой смотрит на зрителя спокойным, немного усталым взглядом."},
+  {author:"Илья Репин", title:"Портрет скульптора М. О. Микешина", year:"1888",
+   file:"Ilya Repin, Mikhail Mikeshin, 1888, Tretyakov Gallery 751.jpg",
+   hint:"Пожилой скульптор с окладистой бородой в тёмном сюртуке сидит, скрестив руки, на нейтральном фоне."},
+  {author:"Илья Репин", title:"Портрет писателя С. Т. Аксакова", year:"1878",
+   file:"Aksakov by Repin.jpg",
+   hint:"Пожилой писатель в халате сидит в кресле, взгляд мягкий и созерцательный."},
+  {author:"Михаил Нестеров", title:"Портрет скульптора В. И. Мухиной", year:"1940",
+   file:"Mikhail Nesterov, Vera Mukhina, 1940, Tretyakov Gallery 26668; from goskatalog.ru.jpg",
+   hint:"Женщина-скульптор в рабочем халате стоит рядом с недописанной скульптурой в мастерской."},
+  {author:"Михаил Нестеров", title:"Портрет художника П. Д. Корина", year:"1930",
+   file:"P.D. Korin by M.Nesterov.jpg",
+   hint:"Молодой художник в тёмной одежде изображён на нейтральном фоне со спокойным сосредоточенным взглядом."},
+  {author:"Алексей Саврасов", title:"Рожь", year:"1881",
+   file:"Алексей К. Саврасов - Рожь (1881).jpg",
+   hint:"Волнистое поле спелой ржи под облачным небом, вдалеке — редкие деревья и просёлочная дорога."},
+  {author:"Алексей Саврасов", title:"Озеро в горах Швейцарии", year:"1866",
+   file:"Алексей К. Саврасов - Озеро в горах Швейцарии (1866).jpg",
+   hint:"Спокойная водная гладь горного озера в обрамлении снежных вершин и хвойного леса."},
+  {author:"Алексей Саврасов", title:"Вид на Кремль от Крымского моста в ненастную погоду", year:"1851",
+   file:"Savrasov vid na cremlin.JPG",
+   hint:"Панорама московского Кремля с реки под затянутым тучами, дождливым небом."},
+  {author:"Симон Ушаков", title:"Спас Нерукотворный", year:"1670-е",
+   file:"Simon Ushakov - Спас Нерукотворный - Google Art Project.jpg",
+   hint:"Строгий лик Христа на плате, без изображения тела — икона «Нерукотворный образ»."},
+  {author:"Симон Ушаков", title:"Богоматерь Елеуса Киккская", year:"1668",
+   file:"Simon Ushakov - Богоматерь Елеуса Киккская - Google Art Project.jpg",
+   hint:"Богоматерь с младенцем на руках, письмо сочетает традиционную иконопись с элементами живоподобия."},
+  {author:"Андрей Рублёв", title:"Успение Богоматери", year:"XV век",
+   file:"Андрей Рублёв. Успение Богоматери. XV век.jpg",
+   hint:"Апостолы скорбно склонились у смертного одра Богородицы, в изголовье — фигура Христа с младенческой душой на руках."},
+  {author:"Неизвестный мастер (Новгород)", title:"Спас Нерукотворный", year:"XII век",
+   file:"Christos Acheiropoietos.jpg",
+   hint:"Одна из древнейших икон собрания — суровый, почти монохромный лик Христа новгородского письма."},
+  {author:"Дионисий", title:"Распятие", year:"1500",
+   file:"",
+   hint:"Христос на кресте, вытянутые тонкие фигуры предстоящих, лёгкие светлые краски."},
+  {author:"Феофан Грек", title:"Богоматерь Донская", year:"около 1392",
+   file:"",
+   hint:"Богоматерь с младенцем, щека к щеке, тёплая живописная манера."},
+  {author:"Алексей Антропов", title:"Портрет статс-дамы А. М. Измайловой", year:"1759",
+   file:"",
+   hint:"Пожилая дама в тяжёлом платье, строгое лицо, парадный портрет."},
+  {author:"Иван Аргунов", title:"Портрет неизвестной крестьянки в русском костюме", year:"1784",
+   file:"",
+   hint:"Девушка в кокошнике и сарафане на тёмном фоне."},
+  {author:"Дмитрий Левицкий", title:"Портрет Урсулы Мнишек", year:"1782",
+   file:"",
+   hint:"Молодая женщина в пышном платье с лёгкой улыбкой, кружево и лента."},
+  {author:"Владимир Боровиковский", title:"Екатерина II на прогулке в Царскосельском парке", year:"1794",
+   file:"",
+   hint:"Пожилая императрица в простом платье гуляет по парку с собачкой."},
+  {author:"Михаил Шибанов", title:"Празднество свадебного договора", year:"1777",
+   file:"",
+   hint:"Крестьянская сцена: помолвка, застолье за столом, участники в народных костюмах."},
+  {author:"Алексей Венецианов", title:"Захарка", year:"1825",
+   file:"",
+   hint:"Мальчик-крестьянин с серпом в поле, голова повернута, мягкий свет."},
+  {author:"Алексей Венецианов", title:"На жатве. Лето", year:"1820-е",
+   file:"",
+   hint:"Крестьянка с младенцем отдыхает на поле среди колосьев."},
+  {author:"Александр Иванов", title:"Аппиева дорога при закате солнца", year:"1845",
+   file:"",
+   hint:"Римская дорога с развалинами, закатный свет, пустынный пейзаж."},
+  {author:"Павел Федотов", title:"Свежий кавалер", year:"1846",
+   file:"",
+   hint:"Чиновник в халате с орденом на груди бранится с кухаркой, комната в беспорядке."},
+  {author:"Павел Федотов", title:"Завтрак аристократа", year:"1849",
+   file:"",
+   hint:"Барин прячет книгу, закрывая кусок чёрного хлеба при появлении гостя."},
+  {author:"Павел Федотов", title:"Анкор, ещё анкор!", year:"1851",
+   file:"",
+   hint:"Офицер в комнате с собачкой, велит ей прыгать, дымящаяся трубка."},
+  {author:"Павел Федотов", title:"Вдовушка", year:"1851",
+   file:"",
+   hint:"Молодая вдова в траурном платье, тёмная комната, грустный взгляд."},
+  {author:"Карл Брюллов", title:"Автопортрет", year:"1848",
+   file:"",
+   hint:"Больной усталый художник с запавшими глазами, тёмный плащ."},
+  {author:"Василий Перов", title:"Сельский крестный ход на Пасхе", year:"1861",
+   file:"",
+   hint:"Пьяный священник на крыльце, толпа с иконами, сумрачная деревня."},
+  {author:"Василий Перов", title:"Проводы покойника", year:"1865",
+   file:"",
+   hint:"Женщина с детьми провожает на санях гроб зимой по снегу."},
+  {author:"Василий Перов", title:"Птицелов", year:"1870",
+   file:"",
+   hint:"Мужчина сидит на склоне, в клетке птица, рядом молодой человек и охотник."},
+  {author:"Василий Перов", title:"Рыболов", year:"1871",
+   file:"",
+   hint:"Рыбак на берегу пруда, ожидание улова, тихий осенний пейзаж."},
+  {author:"Василий Перов", title:"Портрет Ф. М. Достоевского", year:"1872",
+   file:"",
+   hint:"Писатель сидит с руками на колене, сосредоточенный тёмный взгляд."},
+  {author:"Иван Крамской", title:"Портрет Л. Н. Толстого", year:"1873",
+   file:"",
+   hint:"Писатель в тёмной одежде, вдумчивый взгляд из-под густых бровей."},
+  {author:"Николай Ге", title:"«Что есть истина?» Христос и Пилат", year:"1890",
+   file:"",
+   hint:"Освещённый Христос и тёмный силуэт Пилата, резкая контрастная светотень."},
+  {author:"Николай Ге", title:"Голгофа", year:"1893",
+   file:"",
+   hint:"Мрачная сцена распятия, силуэты крестов, холодные краски."},
+  {author:"Алексей Саврасов", title:"Просёлок", year:"1873",
+   file:"",
+   hint:"Мокрая дорога с лужами после дождя, серое небо, деревенский пейзаж."},
+  {author:"Алексей Саврасов", title:"Лосиный остров в Сокольниках", year:"1869",
+   file:"",
+   hint:"Весенний лес, талый снег, лось на опушке."},
+  {author:"Иван Шишкин", title:"Полдень. В окрестностях Москвы", year:"1869",
+   file:"",
+   hint:"Дорога через поле, высокое небо с облаками, стога и далёкий лес."},
+  {author:"Иван Шишкин", title:"Сосны, освещённые солнцем", year:"1886",
+   file:"",
+   hint:"Стволы сосен в лучах заходящего солнца, золотой свет."},
+  {author:"Иван Шишкин", title:"Лесные дали", year:"1884",
+   file:"",
+   hint:"Открытый широкий пейзаж с лесами и далью, лёгкий воздух."},
+  {author:"Архип Куинджи", title:"После дождя", year:"1879",
+   file:"",
+   hint:"Свежий воздух после грозы, мокрая земля, солнце между облаками."},
+  {author:"Архип Куинджи", title:"Север", year:"1879",
+   file:"",
+   hint:"Холодный пейзаж с замёрзшей рекой и заснеженными берегами."},
+  {author:"Архип Куинджи", title:"На острове Валааме", year:"1873",
+   file:"",
+   hint:"Каменистый остров, сосны и озёрный свет."},
+  {author:"Фёдор Васильев", title:"Мокрый луг", year:"1872",
+   file:"",
+   hint:"Влажные цвета лета, облака над лугом после дождя."},
+  {author:"Фёдор Васильев", title:"Оттепель", year:"1871",
+   file:"",
+   hint:"Размытая дорога, подтаявший снег, небо весны."},
+  {author:"Илья Репин", title:"Царевна Софья", year:"1879",
+   file:"",
+   hint:"Заточённая в монастырь царевна в тёмном платье, злой взгляд."},
+  {author:"Илья Репин", title:"Арест пропагандиста", year:"1892",
+   file:"",
+   hint:"Крестьяне и жандармы в избе, захватывают арестованного революционера."},
+  {author:"Илья Репин", title:"Отказ от исповеди перед казнью", year:"1879",
+   file:"",
+   hint:"Осуждённый революционер в камере отказывается от священника."},
+  {author:"Василий Верещагин", title:"Смертельно раненный", year:"1873",
+   file:"",
+   hint:"Солдат с поднятой рукой падает, обнажённая степь."},
+  {author:"Василий Верещагин", title:"Двери Тамерлана", year:"1872",
+   file:"",
+   hint:"Каменная резная дверь и стражник у входа, яркий восточный свет."},
+  {author:"Василий Верещагин", title:"Забытый", year:"1871",
+   file:"",
+   hint:"Мёртвый солдат на поле под палящим солнцем, хищные птицы."},
+  {author:"Василий Поленов", title:"Заросший пруд", year:"1879",
+   file:"",
+   hint:"Тихий пруд, ряска, берёзы и старый деревянный дом."},
+  {author:"Григорий Мясоедов", title:"Земство обедает", year:"1872",
+   file:"",
+   hint:"Мужики-гласные за обеденным столом, неспешная сцена земства."},
+  {author:"Григорий Мясоедов", title:"Чтение манифеста 19 февраля 1861 года", year:"1873",
+   file:"",
+   hint:"Толпа крестьян слушает чтение манифеста об отмене крепостного права."},
+  {author:"Николай Ярошенко", title:"Всюду жизнь", year:"1888",
+   file:"",
+   hint:"Арестанты в вагоне кормят голубей через решётку."},
+  {author:"Константин Савицкий", title:"Встреча иконы", year:"1878",
+   file:"",
+   hint:"Крестьяне на поле выходят навстречу иконе, подняв руки."},
+  {author:"Владимир Маковский", title:"Свидание", year:"1883",
+   file:"",
+   hint:"Мужчина в зелёном сюртуке и женщина на лестнице, чуть напряжённая встреча."},
+  {author:"Владимир Маковский", title:"Крах банка", year:"1881",
+   file:"",
+   hint:"Толпа вкладчиков перед закрытым банком, отчаяние и ярость."},
+  {author:"Владимир Маковский", title:"Ночлежка", year:"1889",
+   file:"",
+   hint:"Бедняки в ночлежном доме, тусклый свет и жилистые лица."},
+  {author:"Алексей Прянишников", title:"Порожняки", year:"1872",
+   file:"",
+   hint:"Возчики с лошадьми по осенней дороге, пустые телеги, холодный свет."},
+  {author:"Василий Максимов", title:"Больной муж", year:"1881",
+   file:"",
+   hint:"Женщина у постели больного мужа в крестьянской избе, бедность и тревога."},
+  {author:"Илья Остроухов", title:"Сиверко", year:"1890",
+   file:"",
+   hint:"Холодный северный пейзаж, мокрая дорога и голые деревья."},
+  {author:"Виктор Васнецов", title:"Царь Иван Васильевич Грозный", year:"1897",
+   file:"",
+   hint:"Царь в тёмной одежде с посохом стоит в тёмном покое, жёсткий взгляд."},
+  {author:"Виктор Васнецов", title:"Три царевны подземного царства", year:"1884",
+   file:"",
+   hint:"Три девы в ярких платьях с драгоценностями на тёмном фоне, самоцветы."},
+  {author:"Михаил Нестеров", title:"Великий постриг", year:"1898",
+   file:"",
+   hint:"Монахини идут по лесной дороге, северный пейзаж, тихий свет."},
+  {author:"Михаил Нестеров", title:"Философы", year:"1917",
+   file:"",
+   hint:"Двое мыслителей в беседе на фоне подмосковного пейзажа."},
+  {author:"Василий Суриков", title:"Посещение царевной женского монастыря", year:"1912",
+   file:"",
+   hint:"Богатая царевна в карете, монахини низко кланяются в дверях монастыря."},
+  {author:"Исаак Левитан", title:"Свежий ветер. Волга", year:"1895",
+   file:"",
+   hint:"Парусная лодка на широкой Волге, облачный день, ветер."},
+  {author:"Исаак Левитан", title:"Первая зелень. Май", year:"1888",
+   file:"",
+   hint:"Берёзы с молодой листвой, свежесть начала мая."},
+  {author:"Исаак Левитан", title:"Вечер. Золотой Плёс", year:"1889",
+   file:"",
+   hint:"Золотистый вечер над Волгой, тишина и свет."},
+  {author:"Валентин Серов", title:"Портрет М. Н. Ермоловой", year:"1905",
+   file:"",
+   hint:"Актриса в строгом чёрном платье, прямая осанка, торжественный свет."},
+  {author:"Валентин Серов", title:"Портрет Г. Л. Гиршман", year:"1907",
+   file:"",
+   hint:"Изящная женщина сидит у зеркала с отражением, лёгкое платье."},
+  {author:"Михаил Врубель", title:"Сирень", year:"1900",
+   file:"",
+   hint:"Куст сирени в сумерках, фиолетовые тона и ощущение тайны."},
+  {author:"Михаил Врубель", title:"Гадающая царевна", year:"1899",
+   file:"",
+   hint:"Девушка в восточной одежде за картами, насыщенные тёмные тона."},
+  {author:"Михаил Врубель", title:"Богатырь", year:"1898",
+   file:"",
+   hint:"Всадник в доспехах на коне, мощная мозаика красок."},
+  {author:"Константин Коровин", title:"У балкона. Испанки Леонора и Ампара", year:"1888",
+   file:"",
+   hint:"Две девушки на балконе в испанских платьях, яркие краски."},
+  {author:"Константин Коровин", title:"Зимой", year:"1894",
+   file:"",
+   hint:"Лошадь с санями в зимнем лесу, мягкие тона заката."},
+  {author:"Виктор Борисов-Мусатов", title:"Водоём", year:"1902",
+   file:"",
+   hint:"Две фигуры в белых платьях у пруда, старый парк."},
+  {author:"Виктор Борисов-Мусатов", title:"Призраки", year:"1903",
+   file:"",
+   hint:"Дамы в старинных платьях в лунном парке, лёгкая грусть."},
+  {author:"Константин Сомов", title:"Дама в голубом", year:"1900",
+   file:"",
+   hint:"Женщина в голубом платье с кружевами и книгой, ностальгическая игра XVIII века."},
+  {author:"Филипп Малявин", title:"Вихрь", year:"1906",
+   file:"",
+   hint:"Ярко-красные юбки крестьянок в стремительном танце."},
+  {author:"Зинаида Серебрякова", title:"Беление холста", year:"1917",
+   file:"",
+   hint:"Крестьянки у реки раскладывают белое полотно, светлая утренняя гамма."},
+  {author:"Зинаида Серебрякова", title:"За завтраком", year:"1914",
+   file:"",
+   hint:"Утро, дети за столом, семейный завтрак, мягкий солнечный свет."},
+  {author:"Николай Рерих", title:"Гонец. Восстал род на род", year:"1897",
+   file:"",
+   hint:"Лодка с гонцом на реке, древнерусский пейзаж и тревожное небо."},
+  {author:"Борис Кустодиев", title:"Большевик", year:"1920",
+   file:"",
+   hint:"Гигантский человек с красным флагом шагает над городом."},
+  {author:"Кузьма Петров-Водкин", title:"1918 год в Петрограде", year:"1920",
+   file:"",
+   hint:"Мать с ребёнком у окна, на фоне площади, красные и бирюзовые тона."},
+  {author:"Василий Кандинский", title:"Композиция VII", year:"1913",
+   file:"",
+   hint:"Яркие цветовые пятна и линии, абстрактная буря красок."},
+  {author:"Василий Кандинский", title:"Москва I", year:"1916",
+   file:"",
+   hint:"Красочный город, купола и крыши в цветных пятнах."},
+  {author:"Казимир Малевич", title:"На сенокосе", year:"1929",
+   file:"",
+   hint:"Крестьяне, фигуры с плоскими лицами на ярком фоне."},
+  {author:"Михаил Ларионов", title:"Отдыхающий солдат", year:"1911",
+   file:"",
+   hint:"Солдат лежит, примитивистски нарисован, плоские яркие формы."},
+  {author:"Наталия Гончарова", title:"Мытьё холста", year:"1910",
+   file:"",
+   hint:"Женщины моют холст, упрощённые формы, крупные цветовые пятна."},
+  {author:"Наталия Гончарова", title:"Автопортрет с жёлтыми лилиями", year:"1907",
+   file:"",
+   hint:"Художница с жёлтыми лилиями, плоскостный стиль примитивизма."},
+  {author:"Аристарх Лентулов", title:"Василий Блаженный", year:"1913",
+   file:"",
+   hint:"Собор в кубистической разбивке, яркие цвета и геометрия."},
+  {author:"Аристарх Лентулов", title:"Звон", year:"1915",
+   file:"",
+   hint:"Колокольня Ивана Великого, раздробленная на цветные плоскости, как звук."},
+  {author:"Илья Машков", title:"Синие сливы", year:"1910",
+   file:"",
+   hint:"Натюрморт с крупными синими сливами, яркий цвет и плотная форма."},
+  {author:"Пётр Кончаловский", title:"Портрет Г. Б. Якулова", year:"1910",
+   file:"",
+   hint:"Мужчина с яркой жёлтой кофтой на красном фоне, резкий контур."},
+  {author:"Роберт Фальк", title:"Красная мебель", year:"1920",
+   file:"",
+   hint:"Интерьер с красной мебелью, насыщенная красно-коричневая гамма."},
+  {author:"Любовь Попова", title:"Живописная архитектоника", year:"1918",
+   file:"",
+   hint:"Геометрические формы и цветные плоскости, конструктивизм."},
+  {author:"Марк Шагал", title:"Венчание", year:"1918",
+   file:"",
+   hint:"Свадебная сцена с летающими фигурами, яркие цвета."},
+  {author:"Юрий Пименов", title:"Новая Москва", year:"1937",
+   file:"",
+   hint:"Женщина за рулём автомобиля, весёлая улица и светлый день."},
+  {author:"Александр Герасимов", title:"После дождя (Мокрая терраса)", year:"1935",
+   file:"",
+   hint:"Терраса с мокрыми бликами после дождя, зелень и свет."},
+  {author:"Павел Корин", title:"Александр Невский", year:"1942",
+   file:"",
+   hint:"Суровый князь в латах, за ним поле битвы, патриотический образ."},
+  {author:"Георгий Нисский", title:"Подмосковье. Февраль", year:"1957",
+   file:"",
+   hint:"Заснеженная дорога, зимний свет и просторное небо."},
+  {author:"Виктор Попков", title:"Строители Братска", year:"1961",
+   file:"",
+   hint:"Группа рабочих-строителей на фоне стройки, суровый стиль."},
+  {author:"Виктор Попков", title:"Шинель отца", year:"1972",
+   file:"",
+   hint:"Женщина держит шинель отца, тихая память и скромный интерьер."},
+  {author:"Гелий Коржев", title:"Поднимающий знамя", year:"1960",
+   file:"",
+   hint:"Раненый коммунист поднимает знамя, драматическое освещение."},
+  {author:"Таир Салахов", title:"Портрет композитора Кара Караева", year:"1960",
+   file:"",
+   hint:"Композитор в лаконичной композиции, локальные цвета."},
+  {author:"Карл Брюллов", title:"Портрет А. Н. Струговщикова", year:"1840",
+   file:"",
+   hint:"Поэт и переводчик в свободной позе, лёгкий взгляд, портрет в романтической манере."},
+  {author:"Иван Айвазовский", title:"Среди волн", year:"1898",
+   file:"",
+   hint:"Огромные штормовые волны под низким небом, пенные гребни без берега."},
+  {author:"Виктор Васнецов", title:"Снегурочка", year:"1899",
+   file:"",
+   hint:"Девушка в белой одежде и меховой шапке в зимнем лесу среди заснеженных ёлок."},
+  {author:"Василий Верещагин", title:"Нападают врасплох", year:"1871",
+   file:"",
+   hint:"Среднеазиатская степь, нападающие всадники и растерянные люди."},
+  {author:"Василий Верещагин", title:"У крепостной стены. «Пусть войдут»", year:"1871",
+   file:"",
+   hint:"Солдаты под стеной крепости, ожидающие, раскалённый воздух."},
+  {author:"Василий Верещагин", title:"Победители", year:"1878",
+   file:"",
+   hint:"Подвиги русских в Балканской войне, поле, усеянное телами."},
+  {author:"Василий Верещагин", title:"Шипка-Шейново. Скобелев под Шипкой", year:"1879",
+   file:"",
+   hint:"Генерал верхом перед строем солдат, снег и ликование."},
+  {author:"Михаил Врубель", title:"Портрет С. И. Мамонтова", year:"1897",
+   file:"",
+   hint:"Меценат в кресле, взгляд внимательный и проницательный."},
+  {author:"Николай Ге", title:"Портрет А. И. Герцена", year:"1867",
+   file:"",
+   hint:"Мыслитель с седой бородой, строгое лицо на тёмном фоне."},
+  {author:"Николай Ге", title:"Портрет Н. А. Некрасова", year:"1872",
+   file:"",
+   hint:"Поэт с тяжёлым взглядом, больной и сосредоточенный."},
+  {author:"Иван Крамской", title:"Полесовщик", year:"1874",
+   file:"",
+   hint:"Мужик в рваной одежде с ружьём в дождливом лесу."},
+  {author:"Иван Крамской", title:"Портрет Н. А. Некрасова", year:"1877",
+   file:"",
+   hint:"Больной поэт в халате, лицо усталое и измождённое."},
+  {author:"Иван Крамской", title:"Крестьянин с уздечкой", year:"1883",
+   file:"",
+   hint:"Старик с уздечкой в руках, хитрый прищуренный взгляд."},
+  {author:"Архип Куинджи", title:"Ночное", year:"1905",
+   file:"",
+   hint:"Лунная ночь, мерцающие огни костров и бескрайняя степь."},
+  {author:"Владимир Маковский", title:"Любители соловьёв", year:"1873",
+   file:"",
+   hint:"Мужики в трактире слушают соловья, умилённые и напряжённые лица."},
+  {author:"Григорий Мясоедов", title:"Поздравление молодых в доме помещика", year:"1861",
+   file:"",
+   hint:"Крестьяне поздравляют новобрачных в барском доме, натянутая сцена."},
+  {author:"Михаил Нестеров", title:"Юность преподобного Сергия", year:"1897",
+   file:"",
+   hint:"Юный Сергий в лесу с медведем, светлая лесная поляна."},
+  {author:"Михаил Нестеров", title:"Под благовест", year:"1895",
+   file:"",
+   hint:"Монашка у реки, колокольный звон и летний вечер."},
+  {author:"Василий Перов", title:"Трапеза", year:"1876",
+   file:"",
+   hint:"Старик-монах и смиренные нищие за обедом при свече, сумрак трапезной."},
+  {author:"Василий Перов", title:"Чаепитие в Мытищах", year:"1862",
+   file:"",
+   hint:"Толстый поп за столом, нищий старик-инвалид и служанка с самоваром."},
+  {author:"Василий Перов", title:"Портрет А. Н. Островского", year:"1871",
+   file:"",
+   hint:"Драматург с задумчивым выражением, портрет в тёмных тонах."},
+  {author:"Василий Перов", title:"Портрет В. И. Даля", year:"1872",
+   file:"",
+   hint:"Седой старик с проницательным взглядом и высоким лбом."},
+  {author:"Василий Перов", title:"Утопленница", year:"1867",
+   file:"",
+   hint:"Тело молодой женщины на набережной, склонившийся полицейский, мрачный рассвет."},
+  {author:"Василий Перов", title:"Странник", year:"1870",
+   file:"",
+   hint:"Старик-странник в бедной одежде идёт по дороге."},
+  {author:"Василий Перов", title:"Савояр", year:"1864",
+   file:"",
+   hint:"Мальчик-савояр с шарманкой, одинокий взгляд на улице."},
+  {author:"Зинаида Серебрякова", title:"Карточный домик", year:"1919",
+   file:"",
+   hint:"Дети строят карточный домик, сосредоточенные лица, мягкий свет."},
+  {author:"Валентин Серов", title:"Портрет М. А. Морозова", year:"1902",
+   file:"",
+   hint:"Бизнесмен-коллекционер в тёмной одежде, спокойный и уверенный."},
+  {author:"Валентин Серов", title:"Портрет М. А. Врубеля", year:"1907",
+   file:"",
+   hint:"Художник с резкими чертами лица, нервный сосредоточенный взгляд."},
+  {author:"Иван Шишкин", title:"Ручей в берёзовом лесу", year:"1883",
+   file:"",
+   hint:"Ручей с камнями среди берёз, пятна солнечного света на листве."},
+];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+const PERIODS = [
+  {id:"ancient", label:"Древнерусское искусство", range:"XII–XVII века", desc:"Иконопись"},
+  {id:"c18", label:"XVIII век", range:"1730–1800-е", desc:"Придворный портрет, классицизм"},
+  {id:"c19_early", label:"Первая половина XIX века", range:"1800–1850-е", desc:"Романтизм"},
+  {id:"peredvizhniki", label:"Передвижники", range:"1860–1890-е", desc:"Реализм, вторая половина XIX века"},
+  {id:"modern", label:"Модерн", range:"Рубеж XIX–XX веков", desc:"Символизм, «Мир искусства»"},
+  {id:"c20", label:"XX век", range:"1910–1940-е", desc:"Авангард и советское искусство"}
+];
+
+const AUTHOR_PERIOD = {
+  "Андрей Рублёв":"ancient","Симон Ушаков":"ancient","Неизвестный мастер (Новгород)":"ancient",
+  "Луи Каравак":"c18","Георг Гроот":"c18","Дмитрий Левицкий":"c18","Фёдор Рокотов":"c18",
+  "Владимир Боровиковский":"c18","Антон Лосенко":"c18","Степан Щукин":"c18","Фёдор Алексеев":"c18",
+  "Орест Кипренский":"c19_early","Василий Тропинин":"c19_early","Карл Брюллов":"c19_early",
+  "Алексей Венецианов":"c19_early","Иван Айвазовский":"c19_early","Александр Иванов":"c19_early",
+  "Павел Федотов":"c19_early","Василий Худяков":"c19_early",
+  "Василий Пукирев":"peredvizhniki","Василий Перов":"peredvizhniki","Иван Крамской":"peredvizhniki",
+  "Алексей Саврасов":"peredvizhniki","Иван Шишкин":"peredvizhniki",
+  "Иван Шишкин, Константин Савицкий":"peredvizhniki","Архип Куинджи":"peredvizhniki",
+  "Илья Репин":"peredvizhniki","Василий Суриков":"peredvizhniki","Виктор Васнецов":"peredvizhniki",
+  "Василий Поленов":"peredvizhniki","Исаак Левитан":"peredvizhniki","Василий Верещагин":"peredvizhniki",
+  "Николай Ге":"peredvizhniki","Григорий Мясоедов":"peredvizhniki","Андрей Рябушкин":"peredvizhniki",
+  "Николай Кузнецов":"peredvizhniki","Владимир Маковский":"peredvizhniki","Константин Маковский":"peredvizhniki",
+  "Сергей Иванов":"peredvizhniki",
+  "Михаил Врубель":"modern","Валентин Серов":"modern","Михаил Нестеров":"modern",
+  "Константин Коровин":"modern","Борис Кустодиев":"modern","Николай Рерих":"modern",
+  "Зинаида Серебрякова":"modern",
+  "Казимир Малевич":"c20","Михаил Ларионов":"c20","Аристарх Лентулов":"c20",
+  "Кузьма Петров-Водкин":"c20","Пётр Кончаловский":"c20","Марк Шагал":"c20",
+  "Александр Дейнека":"c20","Аркадий Пластов":"c20","Константин Юон":"c20",
+  "Дионисий":"ancient",
+  "Феофан Грек":"ancient",
+  "Алексей Антропов":"c18",
+  "Иван Аргунов":"c18",
+  "Михаил Шибанов":"c18",
+  "Фёдор Васильев":"peredvizhniki",
+  "Николай Ярошенко":"peredvizhniki",
+  "Константин Савицкий":"peredvizhniki",
+  "Алексей Прянишников":"peredvizhniki",
+  "Василий Максимов":"peredvizhniki",
+  "Илья Остроухов":"peredvizhniki",
+  "Виктор Борисов-Мусатов":"modern",
+  "Константин Сомов":"modern",
+  "Филипп Малявин":"modern",
+  "Василий Кандинский":"c20",
+  "Наталия Гончарова":"c20",
+  "Илья Машков":"c20",
+  "Роберт Фальк":"c20",
+  "Любовь Попова":"c20",
+  "Юрий Пименов":"c20",
+  "Александр Герасимов":"c20",
+  "Павел Корин":"c20",
+  "Георгий Нисский":"c20",
+  "Виктор Попков":"c20",
+  "Гелий Коржев":"c20",
+  "Таир Салахов":"c20"
+};
+
+function getPeriod(p){
+  return AUTHOR_PERIOD[p.author] || "peredvizhniki";
+}
+
+let LOCAL={};
+fetch('images/map.json').then(r=>r.ok?r.json():{}).then(m=>{LOCAL=m||{};}).catch(()=>{});
+function localUrl(p){ const i=PAINTINGS.indexOf(p); return LOCAL[i]||''; }
+function fileUrl(name){
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(name) + "?width=600";
+}
+
+
+/* Резервный поиск картинки: если прямой файл не открылся, ищем через API Commons и Википедии */
+function apiThumb(url, pick){
+  return fetch(url).then(r=>r.json()).then(pick).catch(()=>"");
+}
+function commonsSearch(q){
+  return apiThumb("https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&gsrsearch="+encodeURIComponent(q), d=>{
+    const pg=d&&d.query&&d.query.pages; if(!pg) return "";
+    const arr=Object.keys(pg).map(k=>pg[k]).sort((a,b)=>(a.index||0)-(b.index||0));
+    for(const x of arr){ const ii=x.imageinfo&&x.imageinfo[0]; if(ii&&/^image\/(jpeg|png)/.test(ii.mime||"")) return ii.thumburl||ii.url||""; }
+    return "";
+  });
+}
+function wikiSearch(q,lang){
+  return apiThumb("https://"+lang+".wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages&piprop=thumbnail&pithumbsize=600&gsrsearch="+encodeURIComponent(q), d=>{
+    const pg=d&&d.query&&d.query.pages; if(!pg) return "";
+    const arr=Object.keys(pg).map(k=>pg[k]).sort((a,b)=>(a.index||0)-(b.index||0));
+    for(const x of arr){ if(x.thumbnail&&x.thumbnail.source) return x.thumbnail.source; }
+    return "";
+  });
+}
+function findImage(p){
+  const last=(p.author||"").split(" ").slice(-1)[0];
+  const steps=[
+    ()=>commonsSearch(p.title+" "+last),
+    ()=>commonsSearch(p.author+" "+p.title+" Google Art Project"),
+    ()=>wikiSearch(p.title+" "+p.author+" картина","ru"),
+    ()=>wikiSearch(p.title+" "+p.author+" painting","en")
+  ];
+  return steps.reduce((acc,f)=>acc.then(u=>u||f()),Promise.resolve(""));
+}
+
+function normalize(s){
+  return (s||"")
+    .toLowerCase()
+    .replace(/ё/g,"е")
+    .replace(/[«»"'.,!?()–—-]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function lastNameOf(authorField){
+  // take the first author, then its last word as surname
+  const first = authorField.split(",")[0].trim();
+  const parts = first.split(" ");
+  return normalize(parts[parts.length-1]);
+}
+
+function titleKeyMatch(guess, title){
+  const g = normalize(guess);
+  const t = normalize(title);
+  if(!g) return false;
+  if(t.includes(g) || g.includes(t)) return true;
+  const tWords = t.split(" ").filter(w=>w.length>3);
+  if(tWords.length===0) return g===t;
+  const hits = tWords.filter(w=>g.includes(w)).length;
+  return hits >= Math.max(1, Math.ceil(tWords.length*0.5));
+}
+
+function authorMatch(guess, authorField){
+  const g = normalize(guess);
+  if(!g) return false;
+  const surname = lastNameOf(authorField);
+  return g.includes(surname) || surname.includes(g);
+}
+
+let order = [];
+let idx = 0;
+let score = 0;
+let answered = false;
+let currentPeriodId = null;
+
+const periodArea = document.getElementById('periodArea');
+const progressRow = document.getElementById('progressRow');
+const homeBtn = document.getElementById('homeBtn');
+homeBtn.addEventListener('click', ()=>renderPeriodSelect());
+const quizArea = document.getElementById('quizArea');
+const finalArea = document.getElementById('finalArea');
+const qCounter = document.getElementById('qCounter');
+const progressFill = document.getElementById('progressFill');
+const scoreLabel = document.getElementById('scoreLabel');
+
+function renderPeriodSelect(){
+  progressRow.style.display = 'none';
+  quizArea.style.display = 'none';
+  finalArea.style.display = 'none';
+  periodArea.style.display = 'block';
+
+  const totalCount = PAINTINGS.length;
+  const cards = PERIODS.map(per=>{
+    const count = PAINTINGS.filter(p=>getPeriod(p)===per.id).length;
+    if(count===0) return '';
+    return `
+      <button class="periodCard" data-period="${per.id}">
+        <div class="periodTitle">${per.label}</div>
+        <div class="periodRange">${per.range}</div>
+        <div class="periodDesc">${per.desc}</div>
+        <div class="periodCount">${count} ${countWord(count)}</div>
+      </button>`;
+  }).join('');
+
+  periodArea.innerHTML = `
+    <div class="periodIntro">Выберите эпоху для теста — картины будут только из этого раздела.</div>
+    <div class="periodGrid">
+      ${cards}
+      <button class="periodCard periodAll" data-period="__all__">
+        <div class="periodTitle">Все эпохи</div>
+        <div class="periodRange">XII–XX века</div>
+        <div class="periodDesc">Полный набор вперемешку</div>
+        <div class="periodCount">${totalCount} картин</div>
+      </button>
+    </div>
+    <div class="offlineBox"><button id="offlineBtn" class="btn-ghost">Сохранить картины для офлайна</button><div id="offlineStatus"></div></div>
+  `;
+  initOffline();
+
+  periodArea.querySelectorAll('.periodCard').forEach(btn=>{
+    btn.addEventListener('click', ()=>startQuiz(btn.dataset.period));
+  });
+}
+
+function countWord(n){
+  const mod10 = n%10, mod100 = n%100;
+  if(mod100>=11 && mod100<=14) return "картин";
+  if(mod10===1) return "картина";
+  if(mod10>=2 && mod10<=4) return "картины";
+  return "картин";
+}
+
+function startQuiz(periodId){
+  currentPeriodId = periodId;
+  const pool = periodId==="__all__" ? PAINTINGS : PAINTINGS.filter(p=>getPeriod(p)===periodId);
+  order = shuffle(pool);
+  idx = 0; score = 0;
+  periodArea.style.display = 'none';
+  progressRow.style.display = 'flex';
+  quizArea.style.display = 'block';
+  finalArea.style.display = 'none';
+  render();
+}
+
+function updateProgress(){
+  qCounter.textContent = `Вопрос ${idx+1} из ${order.length}`;
+  progressFill.style.width = (((idx)/order.length)*100+4) + "%";
+  scoreLabel.textContent = `${score} верных`;
+}
+
+function render(){
+  answered = false;
+  const p = order[idx];
+  updateProgress();
+
+  quizArea.innerHTML = `
+    <div class="frame">
+      <div class="canvas">
+        <img id="paintImg" src="${localUrl(p)?localUrl(p):p.file?fileUrl(p.file):'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" alt="" referrerpolicy="no-referrer" loading="eager">
+        <div class="fallback" id="fallbackCard" style="display:none">
+          <div class="glyph">*</div>
+          <p>${p.hint}</p>
+        </div>
+      </div>
+    </div>
+    <div class="placard">
+      <div class="field">
+        <label>Автор</label>
+        <input type="text" id="authorInput" placeholder="Например: Иван Шишкин" autocomplete="off" autocapitalize="sentences" autocorrect="off" enterkeyhint="done">
+      </div>
+      <div class="field">
+        <label>Название картины</label>
+        <input type="text" id="titleInput" placeholder="Например: Утро в сосновом лесу" autocomplete="off" autocapitalize="sentences" autocorrect="off" enterkeyhint="done">
+      </div>
+      <div class="row">
+        <button class="btn-primary" id="checkBtn">Ответить</button>
+        <button class="btn-ghost" id="skipBtn">Не знаю, показать ответ</button>
+      </div>
+      <div class="reveal" id="revealBox"></div>
+    </div>
+  `;
+
+  const img = document.getElementById('paintImg');
+  const fb = document.getElementById('fallbackCard');
+  const cur=p;
+  let tried=false;
+  if(!p.file&&!localUrl(p)){ tried=true; img.style.visibility='hidden'; findImage(cur).then(u=>{ if(order[idx]!==cur) return; if(u){ img.style.visibility=''; img.src=u; } else { img.style.display='none'; fb.style.display='flex'; } }); }
+  img.addEventListener('error', ()=>{
+    if(!tried){
+      tried=true;
+      findImage(cur).then(u=>{
+        if(order[idx]!==cur) return;
+        if(u){ img.src=u; } else { img.style.display='none'; fb.style.display='flex'; }
+      });
+      return;
+    }
+    img.style.display='none';
+    fb.style.display='flex';
+  });
+
+  document.getElementById('checkBtn').addEventListener('click', ()=>checkAnswer(false));
+  document.getElementById('skipBtn').addEventListener('click', ()=>checkAnswer(true));
+  document.getElementById('authorInput').addEventListener('keydown', e=>{if(e.key==='Enter') checkAnswer(false);});
+  document.getElementById('titleInput').addEventListener('keydown', e=>{if(e.key==='Enter') checkAnswer(false);});
+}
+
+function checkAnswer(skipped){
+  if(answered) return;
+  answered = true;
+  const p = order[idx];
+  const authorInput = document.getElementById('authorInput');
+  const titleInput = document.getElementById('titleInput');
+  const aVal = authorInput.value;
+  const tVal = titleInput.value;
+  authorInput.disabled = true;
+  titleInput.disabled = true;
+  document.getElementById('checkBtn').disabled = true;
+  document.getElementById('skipBtn').disabled = true;
+
+  let correct = false;
+  if(!skipped){
+    correct = authorMatch(aVal,p.author) && titleKeyMatch(tVal,p.title);
+    if(correct) score++;
+  }
+
+  const box = document.getElementById('revealBox');
+  box.classList.add('show');
+  box.innerHTML = `
+    <div class="verdict ${correct?'correct':'wrong'}">${skipped? 'Ответ:' : (correct? 'Верно!' : 'Не совсем')}</div>
+    <div class="answerCard">
+      <p class="t">${p.title}</p>
+      <p class="a">${p.author}</p>
+      <p class="y">${p.year}, Государственная Третьяковская галерея</p>
+    </div>
+    ${!skipped?`<div class="yourAnswers">
+      <div><b>Ваш автор:</b> ${aVal || '—'}</div>
+      <div><b>Ваше название:</b> ${tVal || '—'}</div>
+    </div>`:''}
+    <div class="row" style="margin-top:16px;">
+      <button class="btn-primary" id="nextBtn">${idx+1<order.length? 'Следующая картина' : 'Показать результат'}</button>
+    </div>
+  `;
+  document.getElementById('nextBtn').addEventListener('click', next);
+  scoreLabel.textContent = `${score} верных`;
+}
+
+function next(){
+  idx++;
+  if(idx>=order.length){
+    finish();
+  } else {
+    render();
+  }
+}
+
+function finish(){
+  quizArea.style.display='none';
+  finalArea.style.display='block';
+  progressFill.style.width='100%';
+  qCounter.textContent = `Вопрос ${order.length} из ${order.length}`;
+  const pct = Math.round((score/order.length)*100);
+  let comment;
+  if(pct>=85) comment = "Отличный результат — вы настоящий знаток Третьяковки.";
+  else if(pct>=60) comment = "Хороший результат! Ещё немного — и вы искусствовед.";
+  else if(pct>=35) comment = "Неплохое начало — самое время сходить в галерею.";
+  else comment = "Есть повод устроить прогулку по залам Лаврушинского переулка.";
+
+  const periodLabel = currentPeriodId==="__all__" ? "Все эпохи" : (PERIODS.find(p=>p.id===currentPeriodId)||{}).label || "";
+
+  finalArea.innerHTML = `
+    <div class="finalScreen">
+      <div class="eyebrow">Результат · ${periodLabel}</div>
+      <div class="big">${score} / ${order.length}</div>
+      <p>${comment}</p>
+      <div class="row" style="justify-content:center;margin-top:20px;">
+        <button class="btn-primary" id="restartBtn" style="flex:none;">Пройти этот раздел ещё раз</button>
+        <button class="btn-ghost" id="changePeriodBtn" style="flex:none;">Выбрать другую эпоху</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    startQuiz(currentPeriodId);
+  });
+  document.getElementById('changePeriodBtn').addEventListener('click', ()=>{
+    renderPeriodSelect();
+  });
+}
+
+renderPeriodSelect();
+</script>
+</body>
+</html>
