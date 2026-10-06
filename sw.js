@@ -1,6 +1,6 @@
-const SHELL='shell-v4', IMG='img-v1';
+const SHELL='shell-v5', IMG='img-v2';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(['./','index.html','manifest.json','icon-180.png'])).then(()=>self.skipWaiting()));});
-self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SHELL&&k!==IMG).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
   const req=e.request; if(req.method!=='GET') return;
   const u=new URL(req.url);
