@@ -1412,7 +1412,7 @@ function render(){
   quizArea.innerHTML = `
     <div class="frame">
       <div class="canvas">
-        <img id="paintImg" src="${localUrl(p)?localUrl(p):p.file?fileUrl(p.file):'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" alt="" referrerpolicy="no-referrer" loading="eager">
+        <img id="paintImg" src="${localUrl(p)?localUrl(p):Object.keys(LOCAL).length?'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==':p.file?fileUrl(p.file):'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" alt="" referrerpolicy="no-referrer" loading="eager">
         <div class="fallback" id="fallbackCard" style="display:none">
           <div class="glyph">*</div>
           <p>${p.hint}</p>
@@ -1440,7 +1440,8 @@ function render(){
   const fb = document.getElementById('fallbackCard');
   const cur=p;
   let tried=false;
-  if(!p.file&&!localUrl(p)){ tried=true; img.style.visibility='hidden'; findImage(cur).then(u=>{ if(order[idx]!==cur) return; if(u){ img.style.visibility=''; img.src=u; } else { img.style.display='none'; fb.style.display='flex'; } }); }
+  if(Object.keys(LOCAL).length&&!localUrl(p)){ img.style.display='none'; fb.style.display='flex'; }
+  else if(!p.file&&!localUrl(p)){ tried=true; img.style.visibility='hidden'; findImage(cur).then(u=>{ if(order[idx]!==cur) return; if(u){ img.style.visibility=''; img.src=u; } else { img.style.display='none'; fb.style.display='flex'; } }); }
   img.addEventListener('error', ()=>{
     if(!tried){
       tried=true;

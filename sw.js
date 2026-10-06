@@ -1,4 +1,4 @@
-const SHELL='shell-v3', IMG='img-v1';
+const SHELL='shell-v4', IMG='img-v1';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(['./','index.html','manifest.json','icon-180.png'])).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
 self.addEventListener('fetch',e=>{
